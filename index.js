@@ -2,6 +2,7 @@
 const fs = require('fs');
 const {Telegraf} = require('telegraf'); 
 const fetch = require('node-fetch');
+const cheerio = require('cheerio');
 
 async function fetchUrl(url){
   let res = await fetch(url);
@@ -9,33 +10,72 @@ async function fetchUrl(url){
   return data;
 }
 
-async function findXkcdPic(html){
-  //let picRegex = new RegExp('<img.*>......')
-  let picRegex = new RegExp('//imgs.xkcd.com/comics/....')
-  return html.match(picRegex)[0];
+function findXkcdTitle(html){
+  let $ = cheerio.load(html);
+  let title = $('#ctitle').html();
+  return title;
 }
 
-fetchUrl('https://xkcd.com/1/')
-.then(findXkcdPic)
-.then(console.log);
+function findXkcdPic(html){
+  let $ = cheerio.load(html);
+  let imgLink = 'https:' + $('#comic img').attr('src');
+  return imgLink;
+}
 
+function readTokenFromFile(filePath){
+  try{
+    return fs.readFileSync(filePath, 'utf8');
+  } catch(err) {
+    console.log('Error while reading token.txt');
+    console.log(err);
+    return null;
+  }
+}
 
-//function readTokenFromFile(filePath){
-//  try{
-//    return fs.readFileSync(filePath, 'utf8');
-//  } catch(err) {
-//    console.log('Error while reading token.txt');
-//    console.log(err);
-//    return null;
-//  }
-//}
-//
+function progressFilePathFromSource(source, id){
+  let progressFilePath = '';
+  switch (source){
+    case 'xkcd':
+      progressFilePath = './userinfo/xkcd/' + id;
+      break;
+  }
+  return progressFilePath;
+}
+
+async function setFileProgress(source, id){
+  return 0;
+}
+
+async function getChatProgress(source, id){
+  let progressFilePath = progressFilePathFromSource(source, id);
+  //this checks if the progress file exists and creates one (with value 1) if it doesn't 
+  try { 
+    await fs.promises.access(progressFilePath)
+  } catch(err){
+    await fs.promises.writeFile(progressFilePath, '1');
+  }
+  let data = 0;
+  data = await fs.promises.readFile(progressFilePath, 'utf8');
+  return data;
+}
+
+getChatProgress('xkcd', 2222).then(console.log);
+
 //let bot = new Telegraf(readTokenFromFile('./token.txt'));
 //
 //bot.start(ctx=>{
-//  ctx.reply('Hello! I\'ll send you new publishments from all sorts of things!');
-//  ctx.reply('https://imgs.xkcd.com/comics/alien_visitors.png');
+//  ctx.reply('Hello! You\'ll now recieve daily xkcd posts!');
 //});
 //
+//let xkcdNum = 0
+//bot.command('get', async ctx=>{
+//  console.log(ctx.chat.id);
+//  let xkcdLink = 'https://xkcd.com/' + xkcdNum;
+//  let html = await fetchUrl(xkcdLink);
+//  let imgLink = findXkcdPic(html);
+//  let title = findXkcdTitle(html);
+//  ctx.reply(title +'\n\n'+ imgLink +'\n'+ xkcdLink);
+//  xkcdNum+=1;
+//});
 //
 //bot.launch();
