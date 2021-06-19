@@ -42,8 +42,9 @@ function progressFilePathFromSource(source, id){
   return progressFilePath;
 }
 
-async function setFileProgress(source, id){
-  return 0;
+async function setChatProgress(source, id, data){
+  let progressFilePath = progressFilePathFromSource(source, id);
+  await fs.promises.writeFile(progressFilePath, data);
 }
 
 async function getChatProgress(source, id){
@@ -56,26 +57,23 @@ async function getChatProgress(source, id){
   }
   let data = 0;
   data = await fs.promises.readFile(progressFilePath, 'utf8');
-  return data;
+  return parseInt(data);
 }
 
-getChatProgress('xkcd', 2222).then(console.log);
+let bot = new Telegraf(readTokenFromFile('./token.txt'));
 
-//let bot = new Telegraf(readTokenFromFile('./token.txt'));
-//
-//bot.start(ctx=>{
-//  ctx.reply('Hello! You\'ll now recieve daily xkcd posts!');
-//});
-//
-//let xkcdNum = 0
-//bot.command('get', async ctx=>{
-//  console.log(ctx.chat.id);
-//  let xkcdLink = 'https://xkcd.com/' + xkcdNum;
-//  let html = await fetchUrl(xkcdLink);
-//  let imgLink = findXkcdPic(html);
-//  let title = findXkcdTitle(html);
-//  ctx.reply(title +'\n\n'+ imgLink +'\n'+ xkcdLink);
-//  xkcdNum+=1;
-//});
-//
-//bot.launch();
+bot.start(ctx=>{
+  ctx.reply('Hello! You\'ll now recieve daily xkcd posts!');
+});
+
+bot.command('get', async ctx=>{
+  let xkcdNum = await getChatProgress('xkcd', ctx.chat.id);
+  let xkcdLink = 'https://xkcd.com/' + xkcdNum;
+  let html = await fetchUrl(xkcdLink);
+  let imgLink = findXkcdPic(html);
+  let title = findXkcdTitle(html);
+  ctx.reply(title +'\n\n'+ imgLink +'\n'+ xkcdLink);
+  setChatProgress('xkcd', ctx.chat.id, xkcdNum + 1);
+});
+
+bot.launch();
