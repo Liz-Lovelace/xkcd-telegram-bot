@@ -10,13 +10,14 @@ let bot = new Telegraf(utils.syncFileToStr('./token.txt'));
 let userId = parseInt(utils.syncFileToStr('./user-id.txt'));
 let timezone = 3;
 
-bot.start(ctx=>{
+bot.start(async ctx=>{
   ctx.reply('Hello!');
-  console.log(ctx.from);
 });
 
+console.log('0 '+ (17 - timezone) +' * * *');
 //xkcd
-const job = schedule.scheduleJob('* '+ 10 + timezone +' * * *', async ()=>{
+const job = schedule.scheduleJob('0 '+ (10 - timezone) +' * * *', async ()=>{
+  console.log('job!');
   for (let i = 0; i < 2; i++){
     let xkcdProgress = await utils.getChatProgress('xkcd');
     let xkcdMsg = await xkcd.getMessageFromPost(xkcdProgress);
