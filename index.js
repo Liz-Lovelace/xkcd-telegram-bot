@@ -8,13 +8,12 @@ const xkcd = require('./modules/xkcd.js');
 
 let bot = new Telegraf(utils.syncFileToStr('./token.txt'));
 let userId = parseInt(utils.syncFileToStr('./user-id.txt'));
-let timezone = 3;
+let timezone = 0;
 
 bot.start(async ctx=>{
   ctx.reply('Hello!');
 });
 
-console.log('0 '+ (17 - timezone) +' * * *');
 //xkcd
 const job = schedule.scheduleJob('0 '+ (10 - timezone) +' * * *', async ()=>{
   console.log('job!');
