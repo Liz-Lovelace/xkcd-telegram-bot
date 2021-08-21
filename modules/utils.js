@@ -17,10 +17,6 @@ function syncFileToStr(filePath){
   }
 }
 
-async function strToFile(str, path){
-  await fs.promises.writeFile(path, str);
-}
-
 async function getChatProgress(source){
   let progressFilePath = __dirname + '/../database/' + source;
   let data = await fs.promises.readFile(progressFilePath, 'utf8');
@@ -31,4 +27,4 @@ async function setChatProgress(source, data){
   fs.promises.writeFile(__dirname + '/../progress/' + source, data)
 }
 
-module.exports = {fetchUrl, syncFileToStr, getChatProgress, setChatProgress, strToFile};
+module.exports = {fetchUrl, syncFileToStr, getChatProgress, setChatProgress};

@@ -21,5 +21,9 @@ async function getMessageFromPost(xkcdProgress){
     imgUrl + '\n' +
     'https://xkcd.com/' + xkcdProgress;
 }
-
-module.exports = {findXkcdTitle, findXkcdPic, getMessageFromPost};
+function getInfoFromJson(j){
+  return '  xkcd:\n' + 
+  'Progress: ' + j['progress'] + '\n' + 
+  'Mode: ' + (j['mode'] == 'manual' ? 'Manual (send " /next xkcd " to recieve new posts)':'Schedule');
+} 
+module.exports = {findXkcdTitle, findXkcdPic, getMessageFromPost, getInfoFromJson};

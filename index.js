@@ -18,14 +18,46 @@ function getUserDirPath(id){
 async function initUserDir(id){
   let userDirPath = getUserDirPath(id);
   await fs.promises.mkdir(userDirPath);
-  //todo: add more useful user info such as name and stuff...
-  await utils.strToFile('user info!!!', userDirPath + '/user-info.txt');
+  let chatInfo = await bot.telegram.getChat(id);
+  await fs.promises.writeFile(userDirPath + '/info.txt',
+    'User: ' + chatInfo.first_name + ' ' + chatInfo.last_name + ' (' + chatInfo.username + ')\n'+
+    'Id:' + id + '\n'
+  );
 }
 
+async function subscribe(id, source){
+  let userDirPath = getUserDirPath(id);
+  switch (source){
+    case 'xkcd':
+      let xkcdObj = {'progress': 1, 'mode':'manual'};
+      await fs.promises.writeFile(userDirPath + '/xkcd.json', JSON.stringify(xkcdObj));
+      break;
+  }
+}
+async function next(id, source){
+  let userDirPath = getUserDirPath(id);
+  switch (source){
+    case 'xkcd':
+      let xkcdInfo = JSON.parse(await fs.promises.readFile(userDirPath + '/xkcd.json'));
+      let xkcdMsg = await xkcd.getMessageFromPost(xkcdInfo.progress);
+      xkcdInfo.progress += 1;
+      await fs.promises.writeFile(userDirPath + '/xkcd.json', JSON.stringify(xkcdInfo));
+      return xkcdMsg;
+  }
+}
 //DEBUG!!!
 let myId = 1311788757;
 initUserDir(myId);
-
+subscribe(myId, 'xkcd');
+let testNext = async ()=>{
+  console.log(await next(myId, 'xkcd'));
+  console.log(await next(myId, 'xkcd'));
+  console.log(await next(myId, 'xkcd'));
+  let jsonInfo = JSON.parse(await fs.promises.readFile(getUserDirPath(myId) + '/xkcd.json'));
+  console.log(xkcd.getInfoFromJson(jsonInfo));
+}
+testNext();
+/*
 bot.start(async ctx=>{
   if (!fs.existsSync(getUserDirPath(ctx.from.id)))
     await initUserDir(ctx.from.id).catch(console.log);
@@ -49,3 +81,4 @@ bot.command('progressInfoDump', async ctx=>{
 });
 
 bot.launch();
+*/
