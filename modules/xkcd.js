@@ -19,7 +19,8 @@ async function getMessageFromPost(xkcdProgress){
   let title = findXkcdTitle(htmlStr);
   return title + '\n' + 
     imgUrl + '\n' +
-    'https://xkcd.com/' + xkcdProgress;
+    'https://xkcd.com/' + xkcdProgress + '\n' +
+    'https://www.explainxkcd.com/wiki/index.php/' + xkcdProgress;
 }
 
 module.exports = {findXkcdTitle, findXkcdPic, getMessageFromPost};
