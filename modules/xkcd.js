@@ -1,5 +1,5 @@
-const cheerio = require('cheerio');
-const utils = require('./utils.js');
+import cheerio from 'cheerio';
+import fetch from 'node-fetch';
 
 function findXkcdTitle(htmlStr){
   let html = cheerio.load(htmlStr);
@@ -13,14 +13,13 @@ function findXkcdPic(htmlStr){
   return imgUrl;
 }
 
-async function getMessageFromPost(xkcdProgress){
-  let htmlStr = await utils.fetchUrl('https://xkcd.com/' + xkcdProgress);
+export default async function xkcdMessage(xkcdProgress){
+  let response = await fetch('https://xkcd.com/' + xkcdProgress);
+  let htmlStr = await response.text();
   let imgUrl = findXkcdPic(htmlStr);
   let title = findXkcdTitle(htmlStr);
-  return title + '\n' + 
-    imgUrl + '\n' +
-    'https://xkcd.com/' + xkcdProgress + '\n' +
-    'https://www.explainxkcd.com/wiki/index.php/' + xkcdProgress;
+  return `${title}
+${imgUrl}
+https://xkcd.com/${xkcdProgress}
+https://www.explainxkcd.com/wiki/index.php/${xkcdProgress}`;
 }
-
-module.exports = {findXkcdTitle, findXkcdPic, getMessageFromPost};
