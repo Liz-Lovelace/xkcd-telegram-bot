@@ -2,7 +2,17 @@ import fs from 'fs';
 import fetch from 'node-fetch';
 import cheerio from 'cheerio';
 
+
 const cachePath = new URL('../var/comics.json', import.meta.url);
+
+async function getCache(){
+  let cache = await fs.promises.readFile(cachePath, 'utf8');
+  return JSON.parse(cache);  
+}
+
+async function setCache(cache){
+  await fs.promises.writeFile(cachePath, JSON.stringify(cache));  
+}
 
 function parseComicHtml(comicHtml){
   let comic = cheerio.load(comicHtml);
@@ -18,26 +28,41 @@ function parseComicHtml(comicHtml){
   };
 }
 
-export async function updateCache(){
-  let cache = await fs.promises.readFile(cachePath, 'utf8');
-  cache = JSON.parse(cache);
+async function getLatestCachedComic(){
+  let cache = await getCache();
   let cachedPosts = cache.map(elem=>elem['postNumber']);
-  let latestCachedPost;
   if (cachedPosts.length == 0)
-    latestCachedPost = 0;
+    return 0;
+  else {
+    let num = Math.max(...cachedPosts);
+    return cache.find(comic => comic.postNumber == num);
+  }
+}
+
+export async function comic(number){
+  let latestCachedComic = await getLatestCachedComic();
+  if (number < 0 || number > latestCachedComic.postNumber)
+    return null;
+  let cache = await getCache();
+  return cache.find(comic => comic.postNumber==number);
+}
+
+export async function updateCache(){
+  console.log('Updating the comic cache');
+  let cache = await getCache();
+  let latestCachedComic = await getLatestCachedComic();
+  let latestOnlineComic = parseComicHtml(await (await fetch('https://xkcd.com')).text());
+
+  if (latestOnlineComic.postNumber > latestCachedComic.postNumber)
+    console.log(`Latest cached post is ${latestCachedComic.postNumber}, but actual latest is ${latestOnlineComic.postNumber}. Downloading new posts...`);
   else
-    latestCachedPost = Math.max(...cachedPosts);
-  
-  let latestComic = await (await fetch('https://xkcd.com')).text();
-  latestComic = parseComicHtml(latestComic);
-  
-  if (latestCachedPost < latestComic.postNumber)
-    console.log(`Latest cached post is ${latestCachedPost}, but actual latest is ${latestComic.postNumber}!`);
-  
-  while (latestCachedPost < latestComic.postNumber){
-    latestCachedPost += 1;
+    return;
+    
+  let downloadingComicNumber = latestCachedComic.postNumber
+  while (downloadingComicNumber < latestOnlineComic.postNumber){
+    downloadingComicNumber += 1;
     // because https://xkcd.com/404 is an actual 404 page
-    if (latestCachedPost == 404){
+    if (downloadingComicNumber == 404){
       cache.push({
           "title":'comic not found',
           "imageUrl":'Null',
@@ -45,11 +70,10 @@ export async function updateCache(){
         })
       continue;
     }
-    console.log(`Fetching post ${latestCachedPost}`);
-    let comic = await (await fetch(`https://xkcd.com/${latestCachedPost}`)).text();
+    console.log(`Fetching post ${downloadingComicNumber}`);
+    let comic = await (await fetch(`https://xkcd.com/${downloadingComicNumber}`)).text();
     comic = parseComicHtml(comic);
     cache.push(comic);
-    await fs.promises.writeFile(cachePath, JSON.stringify(cache));
+    await setCache(cache);
   }
 }
-

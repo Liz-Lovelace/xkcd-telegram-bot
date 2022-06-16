@@ -203,6 +203,11 @@ bot.on('message', async ctx =>{
   }
 })
 
-updateCache();
+// check for new comics every hour
+async function launch(){
+  await updateCache()
+  schedule.scheduleJob('0 * * * *', updateCache);
+  bot.launch();
+}
 
-bot.launch();
+launch()

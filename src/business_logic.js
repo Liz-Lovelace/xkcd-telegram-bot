@@ -1,4 +1,5 @@
 import { getUserData, setUserData } from './database.js';
+import { rescheduleUser } from './schedule_manager.js';
 
 class User {
   constructor(id){
@@ -26,6 +27,7 @@ class User {
 
   async erase(){
     this.setData(null);
+    rescheduleUser(this.id);
   }
 
   async initialize(force=false){
@@ -45,6 +47,7 @@ class User {
 
   async setTimezone(timezone){
     await this.setProperty('timezone', timezone);
+    rescheduleUser(this.id);
   }
 
   async getSchedule(){
@@ -56,6 +59,7 @@ class User {
     schedule.push(time);
     schedule.sort((n1,n2)=>n1-n2)
     await this.setProperty('schedule', schedule);
+    rescheduleUser(this.id);
   }
 
   async removeSchedule(time){
@@ -67,6 +71,7 @@ class User {
       schedule_removed = true;
     }
     await this.setProperty('schedule', schedule);
+    rescheduleUser(this.id);
     return schedule_removed;
   }
 
@@ -77,7 +82,6 @@ class User {
   async getProgress(){
     return await this.getProperty('progress');
   }
-  
 }
 
 export default function user(id){
