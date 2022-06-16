@@ -1,0 +1,1 @@
+ls db.json | entr -cr batcat db.json
